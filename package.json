@@ -1,0 +1,24 @@
+{
+  "name": "blueprint-astro-theme",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "A clean documentation theme for Astro with Blueprint UI",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/react": "^4.2.1",
+    "astro": "^5.5.4",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "^5.8.2"
+  }
+}

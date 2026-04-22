@@ -1,0 +1,28 @@
+---
+// BackToTop - Pure UI component, no business logic
+---
+
+<button class="back-to-top" id="back-to-top" aria-label="回到顶部">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+    <polyline points="18 15 12 9 6 15" />
+  </svg>
+</button>
+
+<script>
+  const btn = document.getElementById('back-to-top');
+  const mainContent = document.querySelector('.main-content') as HTMLDivElement | null;
+
+  if (btn && mainContent) {
+    mainContent.addEventListener('scroll', () => {
+      if (mainContent.scrollTop > 300) {
+        btn.classList.add('visible');
+      } else {
+        btn.classList.remove('visible');
+      }
+    }, { passive: true });
+
+    btn.addEventListener('click', () => {
+      mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+</script>

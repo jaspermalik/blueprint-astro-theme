@@ -1,0 +1,31 @@
+---
+// TableOfContents - Pure UI component, receives headings via props or children
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  headings?: Heading[];
+}
+
+const { headings = [] } = Astro.props;
+---
+
+{headings.length > 0 && (
+  <nav class="toc" aria-label="Table of contents">
+    <div class="toc-title">目录</div>
+    <ul class="toc-list">
+      {headings.map((heading) => (
+        <li class={`toc-item toc-level-${heading.depth}`}>
+          <a href={`#${heading.slug}`}>{heading.text}</a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+)}
+
+<style>
+  /* TOC-specific styles if needed beyond global.css */
+</style>

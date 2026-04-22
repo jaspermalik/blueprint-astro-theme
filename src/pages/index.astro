@@ -1,0 +1,61 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const allArticles = await getCollection('articles');
+const sorted = allArticles.sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
+
+// Build nested nav structure
+const nav = [
+  {
+    title: '快速开始',
+    items: [
+      { title: '欢迎使用', href: '/', num: '001' },
+      { title: '快速开始', href: '/articles/getting-started', num: '002' },
+    ],
+  },
+  {
+    title: '主题配置',
+    items: [
+      { title: '配置选项', href: '/articles/configuration', num: '003' },
+      { title: '自定义样式', href: '/articles/styling', num: '004' },
+      { title: '高级特性', href: '/articles/advanced-features', num: '005' },
+    ],
+  },
+];
+---
+
+<BaseLayout title="Blueprint Astro Theme" nav={nav}>
+  <div class="home-header">
+    <h1 class="home-title">Blueprint Astro Theme</h1>
+    <p class="home-subtitle">一个简洁的文档主题，移植自 Blueprint Docs</p>
+  </div>
+
+  <div class="toc-grid">
+    {sorted.map((article, i) => (
+      <div class="toc-group">
+        <div class="toc-group-title">{article.data.title}</div>
+        <div class="toc-item">
+          <span class="toc-item-num">{String(i + 1).padStart(3, '0')}</span>
+          <a href={`/articles/${article.slug}`}>{article.data.title}</a>
+        </div>
+        {article.data.description && (
+          <p style="font-size: 12px; color: var(--c-text-sub); margin-top: 8px;">
+            {article.data.description}
+          </p>
+        )}
+      </div>
+    ))}
+  </div>
+
+  <section style="margin-top: 48px;">
+    <h2 style="font-size: 20px; margin-bottom: 16px;">特性</h2>
+    <ul style="list-style: disc; padding-left: 24px;">
+      <li style="margin-bottom: 8px;">简洁的侧边栏导航布局</li>
+      <li style="margin-bottom: 8px;">支持亮色/暗色/自动主题切换</li>
+      <li style="margin-bottom: 8px;">响应式设计，适配移动端</li>
+      <li style="margin-bottom: 8px;">基于 CSS 变量易于定制</li>
+      <li style="margin-bottom: 8px;">文章目录组件支持</li>
+    </ul>
+  </section>
+</BaseLayout>

@@ -1,0 +1,53 @@
+---
+import '../styles/global.css';
+import Sidebar from '../components/Sidebar.astro';
+import BackToTop from '../components/BackToTop.astro';
+import ThemeToggle from '../components/ThemeToggle.tsx';
+
+interface NavItem {
+  title: string;
+  href: string;
+  num?: string;
+}
+
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
+
+interface Props {
+  title: string;
+  description?: string;
+  nav?: NavGroup[];
+}
+
+const {
+  title,
+  description = 'A clean documentation theme for Astro',
+  nav = []
+} = Astro.props;
+---
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content={description} />
+  <title>{title}</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="app-container">
+    <Sidebar logo="Blueprint" subtitle="Astro Theme" nav={nav} />
+    <main class="main-content">
+      <slot />
+    </main>
+  </div>
+  <BackToTop />
+  <ThemeToggle client:load />
+</body>
+</html>
