@@ -2,239 +2,112 @@
 
 A clean documentation theme for Astro 5, ported from Blueprint Docs.
 
-## Installation
+## Quick Start
+
+Create a new project from this template:
 
 ```bash
-npm install blueprint-astro-theme
+npm create astro@latest -- --template jaspermalik/blueprint-astro-theme
 ```
 
-This package has peer dependencies on `astro` and `astro-pagefind`. Make sure they are installed in your project:
+Then start the dev server:
 
 ```bash
-npm install astro astro-pagefind
+cd blueprint-astro-theme
+npm install
+npm run dev
 ```
 
-## Setup
+## Project Structure
 
-### 1. Configure Content Collection
-
-Create or update `src/content.config.ts` in your project. Import the theme's schema to ensure your docs match the expected frontmatter structure:
-
-```ts
-import { defineCollection } from 'astro:content';
-import { glob } from 'astro/loaders';
-import { docsSchema } from 'blueprint-astro-theme/schema';
-
-const docs = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/docs' }),
-  schema: docsSchema,
-});
-
-export const collections = { docs };
+```
+src/
+├── components/
+│   ├── Sidebar.astro           # Sidebar with nested groups
+│   ├── SidebarSubgroup.astro   # Recursive nested group renderer
+│   ├── ThemeToggle.astro       # Theme toggle (light/dark/auto)
+│   ├── BackToTop.astro         # Back to top button
+│   ├── TableOfContents.astro   # TOC component
+│   ├── TocGroup.astro          # Homepage card grid
+│   └── Search.astro            # Pagefind search modal
+├── layouts/
+│   └── BaseLayout.astro        # Root layout with sidebar
+├── pages/
+│   ├── index.astro             # Homepage
+│   ├── 404.astro               # Not found page
+│   └── docs/
+│       └── [...slug].astro     # Doc pages
+├── styles/
+│   └── global.css              # Global styles & CSS variables
+├── utils/
+│   └── sidebar.ts              # Auto-generate sidebar from collections
+├── content.config.ts           # Content collection config
+└── schema.ts                   # Reusable docs collection schema
 ```
 
-### 2. Create Your Content
+## Writing Content
 
 Place Markdown files in `src/content/docs/`. Nested folders automatically become nested sidebar groups.
 
 ```md
 ---
 title: Getting Started
-description: How to install and configure the project
+description: Optional description
 order: 1
 ---
 
-## Installation
+## Heading
 
-Run the following command...
+Your content here...
 ```
 
-### 3. Create Pages
+### Frontmatter Fields
 
-#### Homepage (`src/pages/index.astro`)
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `title` | `string` | Yes | Document title |
+| `description` | `string` | No | Short description |
+| `order` | `number` | No | Sort order within group |
+| `date` | `Date` | No | Publication date |
+
+## Sidebar Navigation
+
+The sidebar is auto-generated from the `docs` collection using `src/utils/sidebar.ts`. Directory structure maps to nested groups:
+
+```
+src/content/docs/
+├── getting-started.md
+└── guides/
+    └── basics/
+        └── quick-start.md
+```
+
+This produces: Getting Started, Guides > Basics > Quick Start.
+
+To customize manually, pass a `nav` array to `BaseLayout`:
 
 ```astro
 ---
-import { BaseLayout, TocGroup, generateSidebar } from 'blueprint-astro-theme';
-import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
 
-const allDocs = await getCollection('docs');
-const sidebar = generateSidebar(allDocs);
----
-
-<BaseLayout title="My Documentation" nav={sidebar.groups}>
-  <div class="home-header">
-    <h1 class="home-title">My Documentation</h1>
-    <p class="home-subtitle">Welcome to the docs</p>
-  </div>
-
-  <div class="toc-grid">
-    {sidebar.groups.map((group) => (
-      <TocGroup group={group} docs={allDocs} />
-    ))}
-  </div>
-</BaseLayout>
-```
-
-#### Doc Pages (`src/pages/docs/[...slug].astro`)
-
-```astro
----
-import { BaseLayout, TableOfContents, generateSidebar } from 'blueprint-astro-theme';
-import { getCollection, render } from 'astro:content';
-
-export async function getStaticPaths() {
-  const docs = await getCollection('docs');
-  const sorted = docs.sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
-  return sorted.map((doc, index) => ({
-    params: { slug: doc.id },
-    props: { doc, allDocs: sorted, currentIndex: index },
-  }));
-}
-
-const { doc, allDocs, currentIndex } = Astro.props;
-const { Content, headings } = await render(doc);
-const sidebar = generateSidebar(allDocs);
-
-const prev = currentIndex > 0 ? allDocs[currentIndex - 1] : null;
-const next = currentIndex < allDocs.length - 1 ? allDocs[currentIndex + 1] : null;
----
-
-<BaseLayout title={doc.data.title} description={doc.data.description} nav={sidebar.groups}>
-  <div class="article-with-toc">
-    <article>
-      <header class="article-header">
-        <h1 class="article-title">{doc.data.title}</h1>
-        {doc.data.description && <p class="article-meta">{doc.data.description}</p>}
-      </header>
-
-      <div class="article-content">
-        <Content />
-      </div>
-
-      <nav class="article-nav">
-        {prev ? (
-          <a href={`/docs/${prev.id}`} class="article-nav-link prev">
-            <div class="article-nav-label">Previous</div>
-            <div class="article-nav-title">{prev.data.title}</div>
-          </a>
-        ) : <div />}
-        {next ? (
-          <a href={`/docs/${next.id}`} class="article-nav-link next">
-            <div class="article-nav-label">Next</div>
-            <div class="article-nav-title">{next.data.title}</div>
-          </a>
-        ) : <div />}
-      </nav>
-    </article>
-
-    <aside class="toc-sidebar">
-      <TableOfContents headings={headings} />
-    </aside>
-  </div>
-</BaseLayout>
-```
-
-#### Import Styles
-
-In your project's root layout or page, import the theme's global CSS:
-
-```astro
----
-import 'blueprint-astro-theme/styles/global.css';
----
-```
-
-Or, if you are already using `BaseLayout`, the styles are imported automatically.
-
-### 4. Configure Pagefind (Search)
-
-Add `astro-pagefind` to your `astro.config.mjs`:
-
-```js
-import { defineConfig } from 'astro/config';
-import pagefind from 'astro-pagefind';
-
-export default defineConfig({
-  integrations: [pagefind()],
-  vite: {
-    optimizeDeps: { exclude: ['/pagefind/pagefind.js'] },
-    build: { rollupOptions: { external: ['/pagefind/pagefind.js'] } },
+const nav = [
+  {
+    title: 'Group Name',
+    items: [
+      { title: 'Doc Title', href: '/docs/getting-started' },
+    ],
   },
-});
+];
+---
+
+<BaseLayout title="Page" nav={nav}>
+  <!-- content -->
+</BaseLayout>
 ```
 
-## Available Exports
+## Customizing
 
-### Layouts
-
-| Export | Description |
-|--------|-------------|
-| `BaseLayout` | Root layout with sidebar, theme script, fonts, and slots |
-
-### Components
-
-| Export | Description |
-|--------|-------------|
-| `Sidebar` | Left sidebar with logo, search, navigation groups, theme toggle |
-| `SidebarSubgroup` | Recursive nested group renderer for Sidebar |
-| `TableOfContents` | Sticky right-side TOC from page headings |
-| `ThemeToggle` | Light / dark / auto theme toggle button |
-| `Search` | Pagefind-powered search modal (Cmd+K) |
-| `BackToTop` | Scroll-to-top button |
-| `TocGroup` | Homepage card grid for doc groups |
-
-### Utilities
-
-| Export | Description |
-|--------|-------------|
-| `generateSidebar(docs)` | Auto-generate nested sidebar from docs collection |
-| `getFlatSidebar(docs)` | Flat single-level sidebar from docs collection |
-| `docsSchema` | Zod schema for docs frontmatter (import from `/schema`) |
-
-### Types
-
-| Export | Description |
-|--------|-------------|
-| `SidebarItem` | `{ title, href, num? }` |
-| `SidebarGroup` | `{ title?, items }` |
-| `SidebarConfig` | `{ groups: SidebarGroup[] }` |
-| `DocsCollection` | Inferred type from `docsSchema` |
-
-## BaseLayout Props
-
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `title` | `string` | **required** | Page title (`<title>`) |
-| `description` | `string` | theme description | Meta description |
-| `nav` | `SidebarGroup[]` | `[]` | Sidebar navigation groups |
-| `lang` | `string` | `"zh-CN"` | HTML lang attribute |
-
-## Component Props
-
-### Sidebar
-
-| Prop | Type | Default |
-|------|------|---------|
-| `logo` | `string` | `"Blueprint"` |
-| `subtitle` | `string` | `"Astro Theme"` |
-| `nav` | `SidebarGroup[]` | `[]` |
-| `footerText` | `string` | `""` |
-
-### TableOfContents
-
-| Prop | Type | Default |
-|------|------|---------|
-| `headings` | `{ depth, slug, text }[]` | `[]` |
-| `title` | `string` | `"目录"` |
-
-### Search
-
-| Prop | Type | Default |
-|------|------|---------|
-| `placeholder` | `string` | `"搜索文档"` |
-
-## CSS Variables
+### CSS Variables
 
 Override these in your own global CSS to customize the theme:
 
@@ -252,22 +125,70 @@ Override these in your own global CSS to customize the theme:
 
 Dark mode is automatically handled via `[data-theme="dark"]` overrides.
 
-## Frontmatter Fields
+### BaseLayout Props
 
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `title` | `string` | Yes | Document title |
-| `description` | `string` | No | Short description |
-| `order` | `number` | No | Sort order within group |
-| `date` | `Date` | No | Publication date |
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `title` | `string` | **required** | Page title |
+| `description` | `string` | theme description | Meta description |
+| `nav` | `SidebarGroup[]` | `[]` | Sidebar navigation groups |
+| `lang` | `string` | `"zh-CN"` | HTML lang attribute |
 
-## Responsive Breakpoints
+### Sidebar Props
+
+| Prop | Type | Default |
+|------|------|---------|
+| `logo` | `string` | `"Blueprint"` |
+| `subtitle` | `string` | `"Astro Theme"` |
+| `nav` | `SidebarGroup[]` | `[]` |
+| `footerText` | `string` | `""` |
+
+### TableOfContents Props
+
+| Prop | Type | Default |
+|------|------|---------|
+| `headings` | `{ depth, slug, text }[]` | `[]` |
+| `title` | `string` | `"目录"` |
+
+## Theme Features
+
+### Search
+
+Full-text search is powered by [Pagefind](https://pagefind.app/), integrated via `astro-pagefind`. The search modal is triggered via the icon in the sidebar (keyboard shortcut: `Cmd/Ctrl + K`).
+
+### Theme Toggle
+
+Three modes: `light`, `dark`, `auto`.
+
+- Click the icon at the bottom of the sidebar to switch
+- Persisted in `localStorage`
+- Respects `prefers-color-scheme` when set to `auto`
+
+### Responsive Breakpoints
 
 | Breakpoint | Behavior |
 |------------|----------|
 | `< 768px` | Mobile: sidebar collapses to hamburger menu |
 | `768px - 1024px` | Tablet: TOC hidden |
 | `> 1024px` | Desktop: full layout with sidebar + TOC |
+
+## Reusing as an NPM Package
+
+The theme is also configured for consumption as an npm package. Install in an existing Astro project:
+
+```bash
+npm install blueprint-astro-theme
+```
+
+Import components and utilities:
+
+```astro
+---
+import { BaseLayout, TableOfContents, generateSidebar } from 'blueprint-astro-theme';
+---
+```
+
+See `package.json` exports for all available entry points.
 
 ## License
 
