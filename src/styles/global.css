@@ -544,7 +544,7 @@ body {
 
 .toc-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 24px;
 }
 
@@ -609,11 +609,16 @@ body {
   display: flex;
   align-items: baseline;
   gap: 8px;
-  padding: 6px 0;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--c-border);
 }
 
 .toc-item:last-child {
   border-bottom: none;
+}
+
+.toc-item:first-child {
+  padding-top: 4px;
 }
 
 .toc-item-num {
