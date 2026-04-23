@@ -1,8 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
-import { generateSidebar } from '../utils/sidebar';
-import TocGroup from '../components/TocGroup.astro';
+import { generateSidebar, flattenGroupToReceipt } from '../utils/sidebar';
+import Receipt from '../components/Receipt.astro';
 
 const allDocs = await getCollection('docs');
 const sidebar = generateSidebar(allDocs);
@@ -17,7 +17,7 @@ const sidebar = generateSidebar(allDocs);
 
   <div class="toc-grid">
     {sidebar.groups.map((group) => (
-      <TocGroup group={group} docs={allDocs} />
+      <Receipt label={group.title || ''} lines={flattenGroupToReceipt(group, allDocs)} />
     ))}
   </div>
 

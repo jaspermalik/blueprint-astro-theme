@@ -1,0 +1,47 @@
+---
+import type { ReceiptLine } from '../utils/sidebar';
+
+interface Props {
+  label: string;
+  lines: ReceiptLine[];
+}
+
+const { label, lines } = Astro.props;
+const itemCount = lines.filter((l) => l.type === 'item').length;
+const headerLabel = label || lines.find((l) => l.type === 'item')?.title || '';
+---
+
+<article class="receipt">
+  <header class="receipt-header">
+    <h3 class="receipt-title">{headerLabel}</h3>
+    <div class="receipt-meta">{itemCount} ITEMS</div>
+  </header>
+
+  <div class="receipt-body">
+    {
+      lines.map((line) => {
+        switch (line.type) {
+          case 'item':
+            return (
+              <a href={line.href} class="receipt-line">
+                <span class="receipt-line-name">{line.title}</span>
+                <span class="receipt-line-num">{line.num ?? '—'}</span>
+              </a>
+            );
+          case 'category':
+            return <div class="receipt-category">{line.title}</div>;
+          case 'divider':
+            return <div class="receipt-divider" aria-hidden="true" />;
+        }
+      })
+    }
+  </div>
+
+  <footer class="receipt-footer">
+    <div class="receipt-total">TOTAL: {itemCount} DOCUMENTS</div>
+    <div class="receipt-barcode" aria-hidden="true">
+      ░░░░░░░░░░░░░░░░░░░░░░░░
+    </div>
+    <div class="receipt-closing">END OF SECTION</div>
+  </footer>
+</article>
