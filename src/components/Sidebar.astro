@@ -97,10 +97,12 @@ function isItem(item: SidebarItem | SidebarGroup): item is SidebarItem {
 
   function closeSidebar() {
     sidebar?.classList.remove('open');
+    overlay?.classList.remove('visible');
   }
 
   function toggleSidebar() {
     sidebar?.classList.toggle('open');
+    overlay?.classList.toggle('visible');
   }
 
   menuBtn?.addEventListener('click', toggleSidebar);
