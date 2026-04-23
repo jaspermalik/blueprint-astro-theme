@@ -15,15 +15,6 @@ export interface SidebarConfig {
   groups: SidebarGroup[];
 }
 
-export interface BoardingPassRow {
-  type: 'route' | 'doc' | 'divider';
-  title?: string;
-  href?: string;
-  description?: string;
-  num?: string;
-  origin?: string;
-}
-
 interface TreeNode {
   title: string;
   href?: string;
@@ -90,11 +81,10 @@ function convertTreeNode(node: TreeNode, index: number = 0): SidebarGroup {
     .sort((a, b) => a.order - b.order)
     .map((child, i) => {
       if (child.href) {
-        // Leaf - SidebarItem with auto-generated num from order
+        // Leaf - SidebarItem (no num)
         return {
           title: child.title,
           href: child.href,
-          num: child.order ? String(child.order).padStart(3, '0') : undefined,
         } as SidebarItem;
       } else {
         // Branch - nested SidebarGroup
@@ -108,7 +98,6 @@ function convertTreeNode(node: TreeNode, index: number = 0): SidebarGroup {
       items: [{
         title: node.title,
         href: node.href,
-        num: node.order ? String(node.order).padStart(3, '0') : undefined,
       }],
     };
   }
@@ -129,84 +118,4 @@ export function getFlatSidebar(docs: CollectionEntry<'docs'>[]): SidebarItem[] {
     title: doc.data.title,
     href: `/docs/${doc.id}`,
   }));
-}
-
-/**
- * Find the first doc item in a nested group (for route zone destination).
- */
-function findFirstDoc(group: SidebarGroup): SidebarItem | undefined {
-  for (const item of group.items) {
-    if ('href' in item) {
-      return item;
-    } else {
-      const found = findFirstDoc(item);
-      if (found) return found;
-    }
-  }
-  return undefined;
-}
-
-/**
- * Flatten a SidebarGroup into zone-typed BoardingPassRows.
- * Nested groups become route zones + doc rows + dividers.
- */
-export function flattenGroupToZones(
-  group: SidebarGroup,
-  docs: CollectionEntry<'docs'>[]
-): BoardingPassRow[] {
-  const rows: BoardingPassRow[] = [];
-
-  for (const item of group.items) {
-    if ('href' in item) {
-      // Leaf doc → info grid row
-      const doc = docs.find((d) => `/docs/${d.id}` === item.href);
-      rows.push({
-        type: 'doc',
-        title: item.title,
-        href: item.href,
-        description: doc?.data.description,
-        num: item.num,
-      });
-    } else {
-      // Nested group → route zone + its children
-      const firstDoc = findFirstDoc(item);
-      rows.push({
-        type: 'route',
-        origin: item.title || '',
-        title: firstDoc?.title || '',
-        href: firstDoc?.href,
-      });
-
-      // Add children as doc rows
-      for (const child of item.items) {
-        if ('href' in child) {
-          const doc = docs.find((d) => `/docs/${d.id}` === child.href);
-          rows.push({
-            type: 'doc',
-            title: child.title,
-            href: child.href,
-            description: doc?.data.description,
-            num: child.num,
-          });
-        } else {
-          // Deep nesting: recursively flatten sub-groups as more doc rows
-          const subDoc = findFirstDoc(child);
-          if (subDoc) {
-            const doc = docs.find((d) => `/docs/${d.id}` === subDoc.href);
-            rows.push({
-              type: 'doc',
-              title: subDoc.title,
-              href: subDoc.href,
-              description: doc?.data.description,
-              num: subDoc.num,
-            });
-          }
-        }
-      }
-
-      rows.push({ type: 'divider' });
-    }
-  }
-
-  return rows;
 }
