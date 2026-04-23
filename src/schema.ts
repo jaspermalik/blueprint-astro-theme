@@ -1,4 +1,4 @@
-import { z } from 'astro:content';
+import { z } from 'astro/zod';
 
 /**
  * Default schema for the docs content collection.
