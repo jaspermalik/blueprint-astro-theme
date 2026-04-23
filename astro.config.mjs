@@ -1,11 +1,24 @@
 import { defineConfig } from 'astro/config';
-import react from '@astrojs/react';
+import pagefind from 'astro-pagefind';
 
 export default defineConfig({
-  integrations: [react()],
+  integrations: [pagefind()],
+  vite: {
+    optimizeDeps: {
+      exclude: ['/pagefind/pagefind.js'],
+    },
+    build: {
+      rollupOptions: {
+        external: ['/pagefind/pagefind.js'],
+      },
+    },
+  },
   markdown: {
     shikiConfig: {
-      theme: 'github-light',
+      themes: {
+        light: 'github-light',
+        dark: 'github-dark',
+      },
       wrap: true,
     },
   },
