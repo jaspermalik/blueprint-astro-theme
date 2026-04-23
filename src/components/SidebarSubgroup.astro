@@ -1,0 +1,45 @@
+---
+import SidebarSubgroup from './SidebarSubgroup.astro';
+
+interface SidebarItem {
+  title: string;
+  href: string;
+  num?: string;
+}
+
+interface SidebarGroup {
+  title?: string;
+  items: (SidebarItem | SidebarGroup)[];
+}
+
+interface Props {
+  group: SidebarGroup;
+  depth: number;
+  currentPath: string;
+}
+
+const { group, depth, currentPath } = Astro.props;
+
+function isActive(href: string): boolean {
+  return currentPath === href || currentPath === href + '/';
+}
+
+function isItem(item: SidebarItem | SidebarGroup): item is SidebarItem {
+  return 'href' in item;
+}
+---
+
+<div class="sidebar-subgroup" style={`margin-left: ${depth * 8}px`}>
+  {group.title && <div class="sidebar-subgroup-title">{group.title}</div>}
+  {group.items.map((item) => isItem(item) ? (
+    <a
+      href={item.href}
+      class:list={['sidebar-item', 'sidebar-item-nested', { active: isActive(item.href) }]}
+    >
+      {item.num && <span class="sidebar-item-num">{item.num}</span>}
+      <span>{item.title}</span>
+    </a>
+  ) : (
+    <SidebarSubgroup group={item} depth={depth + 1} currentPath={currentPath} />
+  ))}
+</div>

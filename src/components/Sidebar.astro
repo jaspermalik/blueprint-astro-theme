@@ -1,26 +1,31 @@
 ---
-// Sidebar - Pure UI component, supports nested nav groups
-interface NavItem {
+import ThemeToggle from './ThemeToggle.astro';
+import Search from './Search.astro';
+import SidebarSubgroup from './SidebarSubgroup.astro';
+
+interface SidebarItem {
   title: string;
   href: string;
   num?: string;
 }
 
-interface NavGroup {
-  title?: string;  // Optional - if no title, items render without group
-  items: (NavItem | NavGroup)[];
+interface SidebarGroup {
+  title?: string;
+  items: (SidebarItem | SidebarGroup)[];
 }
 
 interface Props {
   logo?: string;
   subtitle?: string;
-  nav?: NavGroup[];
+  nav?: SidebarGroup[];
+  footerText?: string;
 }
 
 const {
   logo = 'Blueprint',
   subtitle = 'Astro Theme',
-  nav = []
+  nav = [],
+  footerText = ''
 } = Astro.props;
 
 const currentPath = Astro.url.pathname;
@@ -29,7 +34,7 @@ function isActive(href: string): boolean {
   return currentPath === href || currentPath === href + '/';
 }
 
-function isItem(item: NavItem | NavGroup): item is NavItem {
+function isItem(item: SidebarItem | SidebarGroup): item is SidebarItem {
   return 'href' in item;
 }
 ---
@@ -41,54 +46,38 @@ function isItem(item: NavItem | NavGroup): item is NavItem {
   </div>
 
   <div class="sidebar-search">
-    <input
-      type="text"
-      class="search-input"
-      placeholder="搜索... (⌘K)"
-      readonly
-    />
+    <Search placeholder="搜索文档" />
   </div>
 
-  <nav class="sidebar-nav">
+  <div class="sidebar-content">
     {nav.map((group) => (
-      <div class="nav-group">
-        {group.title && <div class="nav-group-title">{group.title}</div>}
-        {group.items.map((item) => {
-          if (isItem(item)) {
-            // Direct nav item
-            return (
-              <a
-                href={item.href}
-                class={`nav-item ${isActive(item.href) ? 'active' : ''}`}
-              >
-                {item.num && <span class="nav-item-num">{item.num}</span>}
-                <span>{item.title}</span>
-              </a>
-            );
-          } else {
-            // Nested group
-            return (
-              <div class="nav-subgroup">
-                {item.title && <div class="nav-subgroup-title">{item.title}</div>}
-                {item.items.map((subItem) => (
-                  <a
-                    href={subItem.href}
-                    class={`nav-item nav-item-nested ${isActive(subItem.href) ? 'active' : ''}`}
-                  >
-                    {subItem.num && <span class="nav-item-num">{subItem.num}</span>}
-                    <span>{subItem.title}</span>
-                  </a>
-                ))}
-              </div>
-            );
-          }
-        })}
+      <div class="sidebar-group">
+        {group.title && (
+          <div class="sidebar-group-title">
+            <span class="bp-arrow">▸</span>
+            {group.title}
+          </div>
+        )}
+        {group.items.map((item) => isItem(item) ? (
+          <a
+            href={item.href}
+            class:list={['sidebar-item', { active: isActive(item.href) }]}
+          >
+            {item.num && <span class="sidebar-item-num">{item.num}</span>}
+            <span>{item.title}</span>
+          </a>
+        ) : (
+          <SidebarSubgroup group={item} depth={0} currentPath={currentPath} />
+        ))}
       </div>
     ))}
-  </nav>
+  </div>
 
   <div class="sidebar-footer">
-    <span style="font-size: 11px; color: var(--c-text-sub);">Blueprint Astro</span>
+    <ThemeToggle />
+    {footerText && (
+      <span style="font-size: 11px; color: var(--c-text-sub);">{footerText}</span>
+    )}
   </div>
 </aside>
 
@@ -107,16 +96,21 @@ function isItem(item: NavItem | NavGroup): item is NavItem {
   const sidebar = document.getElementById('sidebar');
   const overlay = document.getElementById('sidebar-overlay');
 
+  function closeSidebar() {
+    sidebar?.classList.remove('open');
+  }
+
   function toggleSidebar() {
     sidebar?.classList.toggle('open');
   }
 
   menuBtn?.addEventListener('click', toggleSidebar);
-  overlay?.addEventListener('click', toggleSidebar);
+  overlay?.addEventListener('click', closeSidebar);
 
-  document.querySelectorAll('.nav-item').forEach(link => {
-    link.addEventListener('click', () => {
-      sidebar?.classList.remove('open');
-    });
+  document.querySelectorAll('.sidebar-item').forEach(link => {
+    link.addEventListener('click', closeSidebar);
   });
+
+  // Close sidebar on navigation
+  document.addEventListener('astro:before-preparation', closeSidebar);
 </script>

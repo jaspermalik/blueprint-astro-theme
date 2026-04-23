@@ -1,0 +1,79 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TableOfContents from '../../components/TableOfContents.astro';
+import { getCollection, render } from 'astro:content';
+import { generateSidebar } from '../../utils/sidebar';
+
+export async function getStaticPaths() {
+  const docs = await getCollection('docs');
+  const sorted = docs.sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
+  return sorted.map((doc, index) => ({
+    params: { slug: doc.id },
+    props: {
+      doc,
+      allDocs: sorted,
+      currentIndex: index,
+    },
+  }));
+}
+
+const { doc, allDocs, currentIndex } = Astro.props;
+const { Content, headings } = await render(doc);
+
+// Auto-generate sidebar from content collection
+const sidebar = generateSidebar(allDocs);
+
+// Prev/Next
+const prev = currentIndex > 0 ? allDocs[currentIndex - 1] : null;
+const next = currentIndex < allDocs.length - 1 ? allDocs[currentIndex + 1] : null;
+---
+
+<BaseLayout title={doc.data.title} description={doc.data.description} nav={sidebar.groups}>
+  <div class="article-with-toc">
+    <article>
+      <header class="article-header">
+        <nav class="breadcrumb">
+          <a href="/">docs</a>
+          <span class="bp-arrow">→</span>
+          {doc.id.split('/').map((part, i, arr) => (
+            i < arr.length - 1 ? (
+              <>
+                <span>{part}</span>
+                <span class="bp-arrow">→</span>
+              </>
+            ) : (
+              <span class="breadcrumb-current">{doc.data.title}</span>
+            )
+          ))}
+        </nav>
+        <h1 class="article-title">{doc.data.title}</h1>
+        {doc.data.description && (
+          <p class="article-meta">{doc.data.description}</p>
+        )}
+      </header>
+
+      <div class="article-content">
+        <Content />
+      </div>
+
+      <nav class="article-nav">
+        {prev ? (
+          <a href={`/docs/${prev.id}`} class="article-nav-link prev">
+            <div class="article-nav-label"><span class="nav-arrow">←</span> 上一篇</div>
+            <div class="article-nav-title">{prev.data.title}</div>
+          </a>
+        ) : <div></div>}
+        {next ? (
+          <a href={`/docs/${next.id}`} class="article-nav-link next">
+            <div class="article-nav-label">下一篇 <span class="nav-arrow">→</span></div>
+            <div class="article-nav-title">{next.data.title}</div>
+          </a>
+        ) : <div></div>}
+      </nav>
+    </article>
+
+    <aside class="toc-sidebar">
+      <TableOfContents headings={headings} />
+    </aside>
+  </div>
+</BaseLayout>

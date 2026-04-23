@@ -1,0 +1,470 @@
+---
+interface Props {
+  placeholder?: string;
+}
+
+const { placeholder = '搜索文档' } = Astro.props;
+---
+
+<div class="search-trigger" id="search-trigger">
+  <button class="search-btn" id="search-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+    <span>{placeholder}</span>
+    <kbd>⌘K</kbd>
+  </button>
+</div>
+
+<div class="search-overlay" id="search-overlay">
+  <div class="search-backdrop" id="search-backdrop"></div>
+  <div class="search-panel" id="search-panel">
+    <div class="search-head">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        type="text"
+        class="search-field"
+        id="search-field"
+        placeholder="输入关键词..."
+        autocomplete="off"
+      />
+      <button class="search-esc-btn" id="search-esc-btn" aria-label="关闭">
+        esc
+      </button>
+    </div>
+    <div class="search-list" id="search-list">
+      <div class="search-placeholder">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <span>输入关键词搜索文档</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const overlay = document.getElementById('search-overlay');
+  const backdrop = document.getElementById('search-backdrop');
+  const panel = document.getElementById('search-panel');
+  const btn = document.getElementById('search-btn');
+  const escBtn = document.getElementById('search-esc-btn');
+  const field = document.getElementById('search-field') as HTMLInputElement;
+  const list = document.getElementById('search-list');
+
+  interface PagefindAPI {
+    init: () => Promise<void>;
+    search: (q: string) => Promise<{
+      results: Array<{
+        data: () => Promise<{
+          url: string;
+          meta?: { title?: string };
+          excerpt: string;
+        }>;
+      }>;
+    }>;
+  }
+
+  // Extract breadcrumb path from URL (only for nested articles)
+  function extractPath(url: string): string {
+    const cleanUrl = url.replace(/\/$/, '').replace('/articles/', '');
+    const parts = cleanUrl.split('/');
+    if (parts.length > 1) {
+      const group = parts[0];
+      const formattedGroup = group.charAt(0).toUpperCase() + group.slice(1);
+      return formattedGroup;
+    }
+    return '';
+  }
+
+  let pagefind: PagefindAPI | null = null;
+  let selected = -1;
+
+  async function initPagefind() {
+    if (!pagefind) {
+      try {
+        // Dynamic import with path that Vite won't resolve at build time
+        const path = '/pagefind/pagefind.js';
+        const module = await import(/* @vite-ignore */ path);
+        pagefind = module;
+        await pagefind.init();
+      } catch {
+        // Pagefind not available in dev mode, will work after build
+      }
+    }
+    return pagefind;
+  }
+
+  function open() {
+    overlay?.classList.add('visible');
+    backdrop?.classList.add('visible');
+    panel?.classList.add('visible');
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => field?.focus());
+    initPagefind();
+  }
+
+  function close() {
+    overlay?.classList.remove('visible');
+    backdrop?.classList.remove('visible');
+    panel?.classList.remove('visible');
+    document.body.style.overflow = '';
+    if (field) field.value = '';
+    selected = -1;
+  }
+
+  function selectResult(idx: number) {
+    const items = list?.querySelectorAll('.search-item');
+    if (!items?.length) return;
+    items.forEach((el, i) => el.classList.toggle('active', i === idx));
+    selected = idx;
+    if (selected >= 0 && items[selected]) {
+      items[selected].scrollIntoView({ block: 'nearest' });
+    }
+  }
+
+  btn?.addEventListener('click', open);
+  escBtn?.addEventListener('click', close);
+  backdrop?.addEventListener('click', close);
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      overlay?.classList.contains('visible') ? close() : open();
+    }
+    if (e.key === 'Escape') close();
+
+    if (overlay?.classList.contains('visible')) {
+      const items = list?.querySelectorAll('.search-item');
+      const total = items?.length || 0;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        selectResult(selected < total - 1 ? selected + 1 : 0);
+      }
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        selectResult(selected > 0 ? selected - 1 : total - 1);
+      }
+      if (e.key === 'Enter' && selected >= 0 && items?.[selected]) {
+        (items[selected] as HTMLAnchorElement).click();
+      }
+    }
+  });
+
+  field?.addEventListener('input', async () => {
+    selected = -1;
+    const pf = await initPagefind();
+    if (!pf || !list) return;
+
+    const q = field.value.trim();
+    if (!q) {
+      list.innerHTML = `
+        <div class="search-placeholder">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <span>输入关键词搜索文档</span>
+        </div>
+      `;
+      return;
+    }
+
+    const res = await pf.search(q);
+    const data = await Promise.all(res.results.slice(0, 6).map(r => r.data()));
+
+    if (!data.length) {
+      list.innerHTML = `
+        <div class="search-placeholder">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity="0.5">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="15" y1="9" x2="9" y2="15" />
+            <line x1="9" y1="9" x2="15" y2="15" />
+          </svg>
+          <span>未找到 "${q}" 相关内容</span>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = '<div class="search-label">搜索结果</div>' +
+      data.map(d => {
+        const path = extractPath(d.url);
+        return `
+          <a href="${d.url}" class="search-item">
+            <span class="item-bar"></span>
+            <div class="item-body">
+              ${path ? `<div class="item-path">${path}</div>` : ''}
+              <div class="item-title">${d.meta?.title || '无标题'}</div>
+              <div class="item-snippet">${d.excerpt}</div>
+            </div>
+          </a>
+        `;
+      }).join('');
+
+    list.querySelectorAll('a').forEach(a => a.addEventListener('click', close));
+    list.querySelectorAll('.search-item').forEach((el, i) => {
+      el.addEventListener('mouseenter', () => selectResult(i));
+    });
+  });
+</script>
+
+<style>
+  /* === Search Button (sidebar style) === */
+  .search-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 10px;
+    background: var(--c-sidebar-bg);
+    border: 1px solid transparent;
+    border-radius: 4px;
+    color: var(--c-text-sub);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .search-btn:hover {
+    background: var(--c-hover-bg);
+    color: var(--c-text-main);
+  }
+
+  .search-btn:focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 1px;
+  }
+
+  .search-btn kbd {
+    margin-left: auto;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 4px;
+    background: var(--c-bg);
+    border-radius: 3px;
+    color: var(--c-text-sub);
+    opacity: 0.7;
+  }
+
+  /* === Overlay Container === */
+  .search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .search-overlay.visible {
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  /* === Backdrop === */
+  .search-backdrop {
+    position: absolute;
+    inset: 0;
+    background: var(--c-bg);
+    opacity: 0;
+    transition: opacity 0.2s ease-out;
+  }
+
+  .search-backdrop.visible {
+    opacity: 0.5;
+  }
+
+  [data-theme="dark"] .search-backdrop.visible {
+    opacity: 0.6;
+  }
+
+  /* === Panel === */
+  .search-panel {
+    position: absolute;
+    top: 16%;
+    left: 50%;
+    width: min(480px, 88vw);
+    background: var(--c-canvas);
+    border: 1px solid var(--c-border);
+    border-radius: 6px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    transform: translateX(-50%) translateY(-12px);
+    transition: opacity 0.15s ease-out, transform 0.15s ease-out;
+  }
+
+  .search-panel.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  [data-theme="dark"] .search-panel {
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+  }
+
+  /* === Input === */
+  .search-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--c-border);
+  }
+
+  .search-head svg {
+    color: var(--c-text-sub);
+  }
+
+  .search-field {
+    flex: 1;
+    border: none;
+    background: none;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--c-text-main);
+    outline: none;
+  }
+
+  .search-field::placeholder {
+    color: var(--c-text-sub);
+  }
+
+  .search-esc-btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 6px;
+    background: var(--c-hover-bg);
+    border: none;
+    border-radius: 3px;
+    color: var(--c-text-sub);
+    cursor: pointer;
+  }
+
+  .search-esc-btn:hover {
+    background: var(--c-active-bg);
+  }
+
+  /* === Results === */
+  .search-list {
+    max-height: 320px;
+    overflow-y: auto;
+  }
+
+  :global(.search-label) {
+    padding: 8px 16px 4px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--c-text-sub);
+    letter-spacing: 0.3px;
+  }
+
+  :global(.search-item) {
+    display: flex;
+    align-items: stretch;
+    padding-left: 16px;
+    text-decoration: none;
+    color: var(--c-text-main);
+    transition: background 0.08s;
+  }
+
+  :global(.search-item.active) {
+    background: var(--c-hover-bg);
+  }
+
+  :global(.item-bar) {
+    width: 3px;
+    min-height: 48px;
+    align-self: stretch;
+    border-radius: 1.5px;
+    transition: background 0.08s;
+  }
+
+  :global(.search-item.active .item-bar) {
+    background: var(--c-accent);
+  }
+
+  :global(.item-body) {
+    flex: 1;
+    padding: 10px 16px;
+    min-width: 0;
+  }
+
+  :global(.item-title) {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+
+  :global(.item-path) {
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--c-text-sub);
+    opacity: 0.7;
+    margin-bottom: 3px;
+  }
+
+  :global(.item-snippet) {
+    font-size: 12px;
+    color: var(--c-text-sub);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  :global(.item-snippet mark) {
+    color: var(--c-accent);
+    font-weight: 500;
+    background: none;
+  }
+
+  /* === Empty State === */
+  :global(.search-placeholder) {
+    padding: 28px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    color: var(--c-text-sub);
+    font-size: 13px;
+  }
+
+  /* === Mobile === */
+  @media (max-width: 768px) {
+    .search-panel {
+      top: auto;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      max-height: 75vh;
+      border-radius: 8px 8px 0 0;
+      transform: translateY(16px);
+    }
+
+    .search-panel.visible {
+      transform: translateY(0);
+    }
+
+    .search-backdrop.visible {
+      opacity: 0.6;
+    }
+  }
+
+  /* === Reduced Motion === */
+  @media (prefers-reduced-motion: reduce) {
+    .search-panel,
+    .search-backdrop,
+    .search-btn,
+    :global(.search-item),
+    :global(.item-bar) {
+      transition: none;
+    }
+  }
+</style>

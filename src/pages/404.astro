@@ -1,0 +1,99 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+import { generateSidebar } from '../utils/sidebar';
+
+const allDocs = await getCollection('docs');
+const sidebar = generateSidebar(allDocs);
+---
+
+<BaseLayout title="404 - 页面未找到" nav={sidebar.groups}>
+  <div class="error-page">
+    <div class="error-label bp-label">ERROR</div>
+    <div class="error-code">404</div>
+    <h1 class="error-title">页面未找到</h1>
+    <p class="error-message">抱歉，您访问的页面不存在或已被移动。</p>
+    <div class="error-actions">
+      <a href="/" class="btn-primary"><span class="nav-arrow">←</span> 返回首页</a>
+      <a href="/docs/getting-started" class="btn-secondary">快速开始 <span class="nav-arrow">→</span></a>
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .error-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+    padding: 48px 24px;
+  }
+
+  .error-label {
+    margin-bottom: 12px;
+  }
+
+  .error-code {
+    font-size: 96px;
+    font-weight: 700;
+    color: var(--c-accent);
+    line-height: 1;
+    margin-bottom: 16px;
+    font-family: var(--font-mono);
+  }
+
+  .error-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--c-text-main);
+    margin: 0 0 12px;
+  }
+
+  .error-message {
+    font-size: 16px;
+    color: var(--c-text-sub);
+    margin: 0 0 32px;
+  }
+
+  .error-actions {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-primary {
+    background: var(--c-accent);
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: var(--c-accent-hover);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--c-accent);
+    border: 1px solid var(--c-border);
+  }
+
+  .btn-secondary:hover {
+    background: var(--c-hover-bg);
+  }
+
+  .nav-arrow {
+    font-family: var(--font-mono);
+  }
+</style>

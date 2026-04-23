@@ -1,50 +1,23 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
+import { generateSidebar } from '../utils/sidebar';
+import TocGroup from '../components/TocGroup.astro';
 
-const allArticles = await getCollection('articles');
-const sorted = allArticles.sort((a, b) => (a.data.order || 0) - (b.data.order || 0));
-
-// Build nested nav structure
-const nav = [
-  {
-    title: '快速开始',
-    items: [
-      { title: '欢迎使用', href: '/', num: '001' },
-      { title: '快速开始', href: '/articles/getting-started', num: '002' },
-    ],
-  },
-  {
-    title: '主题配置',
-    items: [
-      { title: '配置选项', href: '/articles/configuration', num: '003' },
-      { title: '自定义样式', href: '/articles/styling', num: '004' },
-      { title: '高级特性', href: '/articles/advanced-features', num: '005' },
-    ],
-  },
-];
+const allDocs = await getCollection('docs');
+const sidebar = generateSidebar(allDocs);
 ---
 
-<BaseLayout title="Blueprint Astro Theme" nav={nav}>
+<BaseLayout title="Blueprint Astro Theme" nav={sidebar.groups}>
   <div class="home-header">
     <h1 class="home-title">Blueprint Astro Theme</h1>
+    <div class="home-subtitle-tech">DOCUMENTATION OVERVIEW / v1.0</div>
     <p class="home-subtitle">一个简洁的文档主题，移植自 Blueprint Docs</p>
   </div>
 
   <div class="toc-grid">
-    {sorted.map((article, i) => (
-      <div class="toc-group">
-        <div class="toc-group-title">{article.data.title}</div>
-        <div class="toc-item">
-          <span class="toc-item-num">{String(i + 1).padStart(3, '0')}</span>
-          <a href={`/articles/${article.slug}`}>{article.data.title}</a>
-        </div>
-        {article.data.description && (
-          <p style="font-size: 12px; color: var(--c-text-sub); margin-top: 8px;">
-            {article.data.description}
-          </p>
-        )}
-      </div>
+    {sidebar.groups.map((group) => (
+      <TocGroup group={group} docs={allDocs} />
     ))}
   </div>
 
