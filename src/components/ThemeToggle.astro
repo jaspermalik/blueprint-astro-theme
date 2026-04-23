@@ -2,7 +2,7 @@
 type Theme = 'light' | 'dark' | 'auto';
 ---
 
-<button class="theme-toggle" id="theme-toggle" aria-label="切换主题">
+<button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
   <span id="theme-icon"></span>
 </button>
 
@@ -59,7 +59,7 @@ type Theme = 'light' | 'dark' | 'auto';
     }
     const btn = document.getElementById('theme-toggle');
     if (btn) {
-      btn.setAttribute('aria-label', `主题: ${theme}`);
+      btn.setAttribute('aria-label', `Theme: ${theme}`);
     }
   }
 

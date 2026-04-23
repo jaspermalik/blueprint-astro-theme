@@ -3,7 +3,7 @@ interface Props {
   placeholder?: string;
 }
 
-const { placeholder = '搜索文档' } = Astro.props;
+const { placeholder = 'Search docs' } = Astro.props;
 ---
 
 <div class="search-trigger" id="search-trigger">
@@ -29,10 +29,10 @@ const { placeholder = '搜索文档' } = Astro.props;
         type="text"
         class="search-field"
         id="search-field"
-        placeholder="输入关键词..."
+        placeholder="Type keywords..."
         autocomplete="off"
       />
-      <button class="search-esc-btn" id="search-esc-btn" aria-label="关闭">
+      <button class="search-esc-btn" id="search-esc-btn" aria-label="Close">
         esc
       </button>
     </div>
@@ -42,7 +42,7 @@ const { placeholder = '搜索文档' } = Astro.props;
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
-        <span>输入关键词搜索文档</span>
+        <span>Type keywords to search</span>
       </div>
     </div>
   </div>
@@ -170,7 +170,7 @@ const { placeholder = '搜索文档' } = Astro.props;
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          <span>输入关键词搜索文档</span>
+          <span>Type keywords to search</span>
         </div>
       `;
       return;
@@ -187,13 +187,13 @@ const { placeholder = '搜索文档' } = Astro.props;
             <line x1="15" y1="9" x2="9" y2="15" />
             <line x1="9" y1="9" x2="15" y2="15" />
           </svg>
-          <span>未找到 "${q}" 相关内容</span>
+          <span>No results for "${q}"</span>
         </div>
       `;
       return;
     }
 
-    list.innerHTML = '<div class="search-label">搜索结果</div>' +
+    list.innerHTML = '<div class="search-label">Results</div>' +
       data.map(d => {
         const path = extractPath(d.url);
         return `
@@ -201,7 +201,7 @@ const { placeholder = '搜索文档' } = Astro.props;
             <span class="item-bar"></span>
             <div class="item-body">
               ${path ? `<div class="item-path">${path}</div>` : ''}
-              <div class="item-title">${d.meta?.title || '无标题'}</div>
+              <div class="item-title">${d.meta?.title || 'Untitled'}</div>
               <div class="item-snippet">${d.excerpt}</div>
             </div>
           </a>

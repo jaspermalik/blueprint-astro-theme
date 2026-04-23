@@ -7,15 +7,15 @@ const allDocs = await getCollection('docs');
 const sidebar = generateSidebar(allDocs);
 ---
 
-<BaseLayout title="404 - 页面未找到" nav={sidebar.groups}>
+<BaseLayout title="404 - Page Not Found" nav={sidebar.groups}>
   <div class="error-page">
     <div class="error-label bp-label">ERROR</div>
     <div class="error-code">404</div>
-    <h1 class="error-title">页面未找到</h1>
-    <p class="error-message">抱歉，您访问的页面不存在或已被移动。</p>
+    <h1 class="error-title">Page Not Found</h1>
+    <p class="error-message">Sorry, the page you visited does not exist or has been moved.</p>
     <div class="error-actions">
-      <a href="/" class="btn-primary"><span class="nav-arrow">←</span> 返回首页</a>
-      <a href="/docs/getting-started" class="btn-secondary">快速开始 <span class="nav-arrow">→</span></a>
+      <a href="/" class="btn-primary"><span class="nav-arrow">←</span> Back to Home</a>
+      <a href="/docs/getting-started" class="btn-secondary">Quick Start <span class="nav-arrow">→</span></a>
     </div>
   </div>
 </BaseLayout>

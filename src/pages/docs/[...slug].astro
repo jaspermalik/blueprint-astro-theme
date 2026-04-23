@@ -59,13 +59,13 @@ const next = currentIndex < allDocs.length - 1 ? allDocs[currentIndex + 1] : nul
       <nav class="article-nav">
         {prev ? (
           <a href={`/docs/${prev.id}`} class="article-nav-link prev">
-            <div class="article-nav-label"><span class="nav-arrow">←</span> 上一篇</div>
+            <div class="article-nav-label"><span class="nav-arrow">←</span> Previous</div>
             <div class="article-nav-title">{prev.data.title}</div>
           </a>
         ) : <div></div>}
         {next ? (
           <a href={`/docs/${next.id}`} class="article-nav-link next">
-            <div class="article-nav-label">下一篇 <span class="nav-arrow">→</span></div>
+            <div class="article-nav-label">Next <span class="nav-arrow">→</span></div>
             <div class="article-nav-title">{next.data.title}</div>
           </a>
         ) : <div></div>}
