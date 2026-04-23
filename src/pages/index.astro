@@ -1,8 +1,8 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { getCollection } from 'astro:content';
-import { generateSidebar, flattenGroupForBoardingPass } from '../utils/sidebar';
-import BoardingPass from '../components/BoardingPass.astro';
+import { generateSidebar } from '../utils/sidebar';
+import TocGroup from '../components/TocGroup.astro';
 
 const allDocs = await getCollection('docs');
 const sidebar = generateSidebar(allDocs);
@@ -17,10 +17,7 @@ const sidebar = generateSidebar(allDocs);
 
   <div class="toc-grid">
     {sidebar.groups.map((group) => (
-      <BoardingPass
-        label={group.title || ''}
-        rows={flattenGroupForBoardingPass(group, allDocs)}
-      />
+      <TocGroup group={group} docs={allDocs} />
     ))}
   </div>
 

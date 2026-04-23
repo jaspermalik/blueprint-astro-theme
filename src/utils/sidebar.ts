@@ -15,15 +15,6 @@ export interface SidebarConfig {
   groups: SidebarGroup[];
 }
 
-export interface BoardingPassRow {
-  type: 'doc' | 'category';
-  level: number;
-  title: string;
-  href?: string;
-  description?: string;
-  num?: string;
-}
-
 interface TreeNode {
   title: string;
   href?: string;
@@ -90,11 +81,10 @@ function convertTreeNode(node: TreeNode, index: number = 0): SidebarGroup {
     .sort((a, b) => a.order - b.order)
     .map((child, i) => {
       if (child.href) {
-        // Leaf - SidebarItem with auto-generated num from order
+        // Leaf - SidebarItem (no num)
         return {
           title: child.title,
           href: child.href,
-          num: child.order ? String(child.order).padStart(3, '0') : undefined,
         } as SidebarItem;
       } else {
         // Branch - nested SidebarGroup
@@ -108,7 +98,6 @@ function convertTreeNode(node: TreeNode, index: number = 0): SidebarGroup {
       items: [{
         title: node.title,
         href: node.href,
-        num: node.order ? String(node.order).padStart(3, '0') : undefined,
       }],
     };
   }
@@ -129,39 +118,4 @@ export function getFlatSidebar(docs: CollectionEntry<'docs'>[]): SidebarItem[] {
     title: doc.data.title,
     href: `/docs/${doc.id}`,
   }));
-}
-
-/**
- * Flatten a nested SidebarGroup into a flat list of BoardingPassRows.
- * Category headers become non-clickable rows; docs become link rows.
- */
-export function flattenGroupForBoardingPass(
-  group: SidebarGroup,
-  docs: CollectionEntry<'docs'>[],
-  level: number = 0
-): BoardingPassRow[] {
-  const rows: BoardingPassRow[] = [];
-
-  for (const item of group.items) {
-    if ('href' in item) {
-      const doc = docs.find((d) => `/docs/${d.id}` === item.href);
-      rows.push({
-        type: 'doc',
-        level,
-        title: item.title,
-        href: item.href,
-        description: doc?.data.description,
-        num: item.num,
-      });
-    } else {
-      rows.push({
-        type: 'category',
-        level,
-        title: item.title || '',
-      });
-      rows.push(...flattenGroupForBoardingPass(item, docs, level + 1));
-    }
-  }
-
-  return rows;
 }

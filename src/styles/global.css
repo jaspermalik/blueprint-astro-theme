@@ -579,156 +579,104 @@ body {
   gap: 24px;
 }
 
-/* ============================================
-   Boarding Pass (Home Page TOC Cards)
-   ============================================ */
-
-.boarding-pass {
+.toc-group {
   background: var(--c-canvas);
   border: 1px solid var(--c-border);
-  border-radius: 2px 10px 10px 2px;
-  padding: 20px 20px 32px 20px;
+  border-radius: 6px;
+  padding: 20px;
+}
+
+.toc-group .toc-group {
+  background: var(--c-hover-bg);
+  border-radius: 4px;
+  padding: 12px 12px 12px 12px;
+  margin-left: 0;
   position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.boarding-pass:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-}
-
-.boarding-pass::before {
+.toc-group .toc-group::before {
   content: '';
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 4px;
+  width: 2px;
   background: var(--c-accent);
-  border-radius: 2px 0 0 2px;
-  opacity: 0.85;
-}
-
-.bp-header {
-  margin-bottom: 12px;
-  padding-bottom: 10px;
-  border-bottom: 1px dashed var(--c-border);
-}
-
-.bp-label {
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--c-accent);
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-}
-
-.bp-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.bp-row {
-  display: grid;
-  grid-template-columns: 36px 1fr;
-  align-items: baseline;
-  gap: 8px;
-  padding: 7px 8px;
-  border-radius: 4px;
-  text-decoration: none;
-  transition: background 0.15s ease;
-}
-
-.bp-row:hover {
-  background: var(--c-hover-bg);
-}
-
-.bp-row-num {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--c-text-sub);
-  text-align: right;
-  opacity: 0.6;
-}
-
-.bp-row-content {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-}
-
-.bp-row-title {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--c-text-main);
-  line-height: 1.4;
-}
-
-.bp-row:hover .bp-row-title {
-  color: var(--c-accent);
-}
-
-.bp-row-desc {
-  font-size: 11px;
-  color: var(--c-text-sub);
-  line-height: 1.35;
-  opacity: 0.75;
-}
-
-.bp-row-category {
-  pointer-events: none;
-  margin-top: 4px;
-}
-
-.bp-row-category .bp-row-title {
-  font-size: 10px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
-  color: var(--c-text-sub);
-}
-
-.bp-row--indent-1 {
-  padding-left: 24px;
-}
-
-.bp-row--indent-2 {
-  padding-left: 40px;
-}
-
-.bp-tear-line {
-  position: absolute;
-  bottom: 10px;
-  left: 20px;
-  right: 20px;
-  height: 2px;
-  background: repeating-linear-gradient(
-    to right,
-    var(--c-border) 0px,
-    var(--c-border) 5px,
-    transparent 5px,
-    transparent 10px
-  );
+  opacity: 0.3;
   border-radius: 1px;
 }
 
-/* Dark mode: boarding pass */
-[data-theme="dark"] .boarding-pass:hover {
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+.toc-group-title + .toc-group {
+  margin-top: 12px;
 }
 
-[data-theme="dark"] .bp-tear-line {
-  background: repeating-linear-gradient(
-    to right,
-    var(--c-text-sub) 0px,
-    var(--c-text-sub) 5px,
-    transparent 5px,
-    transparent 10px
-  );
-  opacity: 0.25;
+.toc-group .toc-group + .toc-group {
+  margin-top: 12px;
+}
+
+.toc-group .toc-group .toc-group-title {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--c-text-sub);
+  border-bottom: none;
+  margin-bottom: 8px;
+  padding-bottom: 0;
+}
+
+.toc-group-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.toc-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.toc-item:last-child {
+  border-bottom: none;
+}
+
+.toc-item:first-child {
+  padding-top: 4px;
+}
+
+.toc-item-num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--c-text-sub);
+  min-width: 32px;
+}
+
+.toc-item a {
+  font-size: 13px;
+  color: var(--c-text-main);
+  text-decoration: none;
+  flex: 1;
+  transition: color 0.15s, font-weight 0.15s;
+}
+
+.toc-item a:hover {
+  color: var(--c-accent);
+  font-weight: 500;
+}
+
+.toc-item-desc {
+  font-size: 12px;
+  color: var(--c-text-sub);
+  margin-top: 4px;
+  line-height: 1.4;
 }
 
 /* ============================================
