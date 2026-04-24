@@ -24,14 +24,13 @@ const headerLabel = label || lines.find((l) => l.type === 'item')?.title || '';
           case 'item':
             return (
               <a href={line.href} class="receipt-line">
-                <span class="receipt-line-name">{line.title}</span>
-                <span class="receipt-line-num">{line.num ?? '—'}</span>
+                <span class="receipt-line-name">- {line.title}</span>
               </a>
             );
           case 'category':
             return <div class="receipt-category">{line.title}</div>;
           case 'divider':
-            return <div class="receipt-divider" aria-hidden="true" />;
+            return null;
         }
       })
     }

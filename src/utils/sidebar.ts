@@ -75,28 +75,35 @@ export function generateSidebar(docs: CollectionEntry<'docs'>[]): SidebarConfig 
     }
   }
 
+  // Build global num map from sorted docs (3-digit zero-padded)
+  const numMap = new Map<string, string>();
+  sorted.forEach((doc, i) => {
+    numMap.set(`/docs/${doc.id}`, String(i + 1).padStart(3, '0'));
+  });
+
   // Convert tree to SidebarGroup format
   const groups: SidebarGroup[] = root.children
     .filter(c => c.children.length > 0 || c.href)
     .sort((a, b) => a.order - b.order)
-    .map(convertTreeNode);
+    .map(node => convertTreeNode(node, numMap));
 
   return { groups };
 }
 
-function convertTreeNode(node: TreeNode, index: number = 0): SidebarGroup {
+function convertTreeNode(node: TreeNode, numMap: Map<string, string>): SidebarGroup {
   const items: (SidebarItem | SidebarGroup)[] = node.children
     .sort((a, b) => a.order - b.order)
-    .map((child, i) => {
+    .map((child) => {
       if (child.href) {
-        // Leaf - SidebarItem (no num)
+        // Leaf - SidebarItem with auto num
         return {
           title: child.title,
           href: child.href,
+          num: numMap.get(child.href),
         } as SidebarItem;
       } else {
         // Branch - nested SidebarGroup
-        return convertTreeNode(child, i);
+        return convertTreeNode(child, numMap);
       }
     });
 
@@ -106,6 +113,7 @@ function convertTreeNode(node: TreeNode, index: number = 0): SidebarGroup {
       items: [{
         title: node.title,
         href: node.href,
+        num: numMap.get(node.href),
       }],
     };
   }
@@ -141,48 +149,67 @@ export function flattenGroupToReceipt(
 ): ReceiptLine[] {
   const lines: ReceiptLine[] = [];
 
+  // Collect nested groups first to know which is last
+  const nestedGroups: SidebarGroup[] = [];
+  const flatItems: SidebarItem[] = [];
+
   for (const item of group.items) {
     if ('href' in item) {
-      const doc = docs.find((d) => `/docs/${d.id}` === item.href);
-      lines.push({
-        type: 'item',
-        title: item.title,
-        href: item.href,
-        num: item.num,
-        description: doc?.data.description,
-      });
+      flatItems.push(item);
     } else {
-      // Nested group → category header + its children
-      lines.push({
-        type: 'category',
-        title: item.title || '',
-      });
+      nestedGroups.push(item);
+    }
+  }
 
-      for (const child of item.items) {
-        if ('href' in child) {
-          const doc = docs.find((d) => `/docs/${d.id}` === child.href);
+  // Flat items first (if any)
+  for (const item of flatItems) {
+    const doc = docs.find((d) => `/docs/${d.id}` === item.href);
+    lines.push({
+      type: 'item',
+      title: item.title,
+      href: item.href,
+      num: item.num,
+      description: doc?.data.description,
+    });
+  }
+
+  // Nested groups with lighter visual separation
+  for (let i = 0; i < nestedGroups.length; i++) {
+    const nested = nestedGroups[i];
+    const isLast = i === nestedGroups.length - 1;
+
+    lines.push({
+      type: 'category',
+      title: nested.title || '',
+    });
+
+    for (const child of nested.items) {
+      if ('href' in child) {
+        const doc = docs.find((d) => `/docs/${d.id}` === child.href);
+        lines.push({
+          type: 'item',
+          title: child.title,
+          href: child.href,
+          num: child.num,
+          description: doc?.data.description,
+        });
+      } else {
+        const subDoc = findFirstDoc(child);
+        if (subDoc) {
+          const doc = docs.find((d) => `/docs/${d.id}` === subDoc.href);
           lines.push({
             type: 'item',
-            title: child.title,
-            href: child.href,
-            num: child.num,
+            title: subDoc.title,
+            href: subDoc.href,
             description: doc?.data.description,
+            num: subDoc.num,
           });
-        } else {
-          const subDoc = findFirstDoc(child);
-          if (subDoc) {
-            const doc = docs.find((d) => `/docs/${d.id}` === subDoc.href);
-            lines.push({
-              type: 'item',
-              title: subDoc.title,
-              href: subDoc.href,
-              description: doc?.data.description,
-              num: subDoc.num,
-            });
-          }
         }
       }
+    }
 
+    // Only add divider between nested groups, not after the last one
+    if (!isLast) {
       lines.push({ type: 'divider' });
     }
   }

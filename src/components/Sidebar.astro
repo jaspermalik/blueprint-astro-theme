@@ -62,7 +62,6 @@ function isItem(item: SidebarItem | SidebarGroup): item is SidebarItem {
             href={item.href}
             class:list={['sidebar-item', { active: isActive(item.href) }]}
           >
-            {item.num && <span class="sidebar-item-num">{item.num}</span>}
             <span>{item.title}</span>
           </a>
         ) : (

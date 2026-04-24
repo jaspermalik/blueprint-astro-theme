@@ -184,7 +184,7 @@ body {
 
 .sidebar-group {
   padding: 0;
-  margin-bottom: 16px;
+  margin-bottom: 2px;
 }
 
 .sidebar-group-title {
@@ -617,17 +617,10 @@ body {
 }
 
 .receipt-line {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  padding: 6px 0;
+  display: block;
+  padding: 5px 0;
   text-decoration: none;
   color: var(--c-text-main);
-  border-bottom: 1px dotted var(--c-border);
-}
-
-.receipt-line:last-child {
-  border-bottom: none;
 }
 
 .receipt-line:hover .receipt-line-name {
@@ -639,27 +632,15 @@ body {
   transition: color 0.15s;
 }
 
-.receipt-line-num {
-  font-size: 11px;
-  color: var(--c-text-sub);
-  opacity: 0.7;
-  flex-shrink: 0;
-  margin-left: 12px;
-}
-
 .receipt-category {
   font-size: 10px;
   font-weight: 600;
   color: var(--c-text-sub);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
-  text-align: center;
-  padding: 10px 0 6px;
-}
-
-.receipt-divider {
-  border-top: 1px dashed var(--c-border);
-  margin: 6px 0;
+  letter-spacing: 0.1em;
+  text-align: left;
+  padding: 14px 0 4px;
+  opacity: 0.8;
 }
 
 .receipt-footer {
