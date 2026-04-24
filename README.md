@@ -2,6 +2,8 @@
 
 A clean documentation theme for Astro 5, ported from Blueprint Docs.
 
+![Preview](public/preview.png)
+
 ## Quick Start
 
 Create a new project from this template:
